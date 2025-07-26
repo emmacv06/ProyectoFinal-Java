@@ -166,7 +166,7 @@ public class Parqueo {
 
         char[][] planta = plantaSeleccionada == 1 ? planta1
                 : plantaSeleccionada == 2 ? planta2 : planta3;
-
+        JOptionPane.showMessageDialog(null, mostrarPlanta(planta));
         String posicionInput = JOptionPane.showInputDialog("Ingrese la posición a liberar (fila,columna) ej: 0,3");
         if (posicionInput == null) {
             return;

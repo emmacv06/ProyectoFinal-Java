@@ -12,123 +12,141 @@ import javax.swing.JOptionPane;
  */
 public class EspacioRecreativo {
 
-    private static String[] horarios = {"9am", "10am", "11am", "12pm", "1pm", "2pm"};
-    private static String[] reservas = new String[horarios.length];
+    static Recreativo[] espacios = new Recreativo[7];
+    static boolean precargado = false;
 
     public EspacioRecreativo() {
-        for (int i = 0; i < reservas.length; i++) {
-            reservas[i] = "";
+    }
+
+    static void precargar() {
+        espacios[0] = new Recreativo("Ping-pong", "Mesa 1", 2);
+        espacios[1] = new Recreativo("Billar", "Mesa 2", 2);
+        espacios[2] = new Recreativo("Fútbol", "Cancha 1", 12);
+        espacios[3] = new Recreativo("Fútbol", "Cancha 2", 12);
+        espacios[4] = new Recreativo("Baloncesto", "Cancha Principal", 10);
+        espacios[5] = new Recreativo("Tenis", "Cancha 1", 2);
+        espacios[6] = new Recreativo("Tenis", "Cancha 2", 2);
+    }
+
+    static class Recreativo {
+
+        String tipo;
+        String nombre;
+        int capacidad;
+        int disponibles;
+
+        public Recreativo(String tipo, String nombre, int capacidad) {
+            this.tipo = tipo;
+            this.nombre = nombre;
+            this.capacidad = capacidad;
+            this.disponibles = capacidad;
+        }
+
+        public boolean reservar(int cantidad) {
+            if (disponibles >= cantidad) {
+                disponibles -= cantidad;
+                return true;
+            }
+            return false;
+        }
+
+        public void liberar(int cantidad) {
+            disponibles = Math.min(disponibles + cantidad, capacidad);
+        }
+
+        public String resumen() {
+            return tipo + " - " + nombre + " | Cupos: " + disponibles;
+        }
+
+        public int reservados() {
+            return capacidad - disponibles;
         }
     }
 
     public void menuEspacioRecreativo() {
-        while (true) {
-            String opcion = JOptionPane.showInputDialog(
-                    "Espacio Recreativo - Menú\n"
-                    + "1. Ver horarios\n"
-                    + "2. Reservar horario\n"
-                    + "3. Volver al menú principal"
-            );
-            if (opcion == null || opcion.equals("3")) {
+        if (!precargado) {
+            precargar();
+            precargado = true;
+        }
+
+        String op;
+        do {
+            op = JOptionPane.showInputDialog("ESPACIOS RECREATIVOS\n1. Ver\n2. Reservar\n3. Volver");
+            if (op == null || op.equals("3")) {
                 break;
             }
 
-            switch (opcion) {
-                case "1":
-                    mostrarReservas();
-                    break;
-                case "2":
-                    reservarHorario();
-                    break;
-                default:
-                    JOptionPane.showMessageDialog(null, "Opción inválida");
-            }
-        }
-    }
-
-    private void mostrarReservas() {
-        StringBuilder sb = new StringBuilder("Horarios de Espacio Recreativo:\n");
-        int disponibles = 0;
-        for (int i = 0; i < horarios.length; i++) {
-            if (reservas[i].isEmpty()) {
-                sb.append(horarios[i]).append(" - LIBRE\n");
-                disponibles++;
+            if (op.equals("1")) {
+                mostrarEspacios();
+            } else if (op.equals("2")) {
+                reservar();
             } else {
-                sb.append(horarios[i]).append(" - RESERVADO por ").append(reservas[i]).append("\n");
+                JOptionPane.showMessageDialog(null, "Opción inválida.");
             }
-        }
-        sb.append("\nTotal horarios libres: ").append(disponibles);
-        JOptionPane.showMessageDialog(null, sb.toString());
+        } while (true);
     }
 
-    private void reservarHorario() {
-        String hora = JOptionPane.showInputDialog("Ingrese hora a reservar (ejemplo: 9am):");
-        if (hora == null) {
-            return;
+    public void mostrarEspacios() {
+        String msg = "Espacios disponibles:\n";
+        for (int i = 0; i < espacios.length; i++) {
+            msg += i + ". " + espacios[i].resumen() + "\n";
         }
-        hora = hora.trim().toLowerCase();
+        JOptionPane.showMessageDialog(null, msg);
+    }
 
-        int pos = -1;
-        for (int i = 0; i < horarios.length; i++) {
-            if (horarios[i].equalsIgnoreCase(hora)) {
-                pos = i;
-                break;
+    public void mostrarReservas() {
+        String mensaje = "ESPACIOS CON RESERVAS:\n\n";
+        boolean hay = false;
+        for (Recreativo r : espacios) {
+            int res = r.reservados();
+            if (res > 0) {
+                mensaje += r.tipo + " - " + r.nombre + " | Reservados: " + res + "\n";
+                hay = true;
             }
         }
-
-        if (pos == -1) {
-            JOptionPane.showMessageDialog(null, "Hora inválida.");
-            return;
-        }
-
-        if (reservas[pos].isEmpty()) {
-            reservas[pos] = "Reservado";
-            JOptionPane.showMessageDialog(null, "Reserva exitosa a las " + horarios[pos]);
+        if (hay) {
+            JOptionPane.showMessageDialog(null, mensaje);
         } else {
-            JOptionPane.showMessageDialog(null, "Hora ya reservada.");
+            JOptionPane.showMessageDialog(null, "No hay reservas realizadas.");
         }
     }
 
-    public void mostrarReservas1() {
-        StringBuilder sb = new StringBuilder("Reservas Espacio Recreativo:\n");
-        boolean alguna = false;
-        for (int i = 0; i < horarios.length; i++) {
-            if (!reservas[i].isEmpty()) {
-                sb.append(horarios[i]).append(" - ").append(reservas[i]).append("\n");
-                alguna = true;
+    public void reservar() {
+        mostrarEspacios();
+        try {
+            String id = JOptionPane.showInputDialog("ID de socio:");
+            int esp = Integer.parseInt(JOptionPane.showInputDialog("Espacio a reservar (número):"));
+            int cant = Integer.parseInt(JOptionPane.showInputDialog("¿Cuántas personas usarán el espacio?"));
+
+            if (esp >= 0 && esp < espacios.length) {
+                if (espacios[esp].reservar(cant)) {
+                    JOptionPane.showMessageDialog(null, "Reserva hecha para socio " + id);
+                } else {
+                    JOptionPane.showMessageDialog(null, "No hay cupos suficientes.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Número de espacio inválido.");
             }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
-        if (!alguna) {
-            sb.append("No hay reservas.\n");
-        }
-        JOptionPane.showMessageDialog(null, sb.toString());
     }
 
     public void liberarReserva() {
-        String hora = JOptionPane.showInputDialog("Ingrese hora para liberar reserva:");
-        if (hora == null) {
-            return;
-        }
-        hora = hora.trim().toLowerCase();
+        mostrarEspacios();
+        try {
+            int esp = Integer.parseInt(JOptionPane.showInputDialog("Espacio a liberar (número):"));
+            int cant = Integer.parseInt(JOptionPane.showInputDialog("¿Cuántos cupos desea liberar?"));
 
-        int pos = -1;
-        for (int i = 0; i < horarios.length; i++) {
-            if (horarios[i].equalsIgnoreCase(hora)) {
-                pos = i;
-                break;
+            if (esp >= 0 && esp < espacios.length) {
+                espacios[esp].liberar(cant);
+                JOptionPane.showMessageDialog(null, "Reserva liberada.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Número inválido.");
             }
-        }
-
-        if (pos == -1) {
-            JOptionPane.showMessageDialog(null, "Hora inválida.");
-            return;
-        }
-
-        if (!reservas[pos].isEmpty()) {
-            reservas[pos] = "";
-            JOptionPane.showMessageDialog(null, "Reserva liberada correctamente.");
-        } else {
-            JOptionPane.showMessageDialog(null, "No hay reserva en esa hora.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
 }
+

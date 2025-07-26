@@ -111,7 +111,7 @@ public class SistemaGimnasio {
                 clasesGrupales.mostrarClases();
                 break;
             case "6":
-                espacioRecreativo.mostrarReservas1();
+                espacioRecreativo.mostrarReservas();
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "Opción inválida");
